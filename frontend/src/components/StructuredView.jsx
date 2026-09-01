@@ -15,9 +15,16 @@ import {
   FileSearch,
   ExternalLink,
   SlidersHorizontal,
-  Bookmark
+  Bookmark,
+  Bot,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  Activity,
+  Eye
 } from 'lucide-react';
 import { getPageImageUrl, getDocumentPdfUrl } from '../api';
+import RegulatoryAssistant from './RegulatoryAssistant';
 
 function renderFormattedSectionText(text, isSelected) {
   if (!text) return null;
@@ -106,6 +113,8 @@ export default function StructuredView({
   const [copiedField, setCopiedField] = useState(null);
   const [viewerMode, setViewerMode] = useState("canvas"); // 'canvas' or 'native'
   const [imgLoadError, setImgLoadError] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [showXRay, setShowXRay] = useState(false);
 
   const cardListRef = useRef(null);
   const cardRefs = useRef({});
@@ -114,6 +123,7 @@ export default function StructuredView({
     ? documentData.extracted_data 
     : (Array.isArray(documentData?.sections) ? documentData.sections : []);
 
+  const metadata = documentData?.metadata || {};
   const totalPages = documentData?.statistics?.total_pages || 1;
 
   useEffect(() => {
@@ -186,6 +196,9 @@ export default function StructuredView({
     }
   };
 
+  const currentScale = 1.6 * pdfZoom;
+  const currentImageUrl = docId ? getPageImageUrl(docId, activePage, 2.0) : '';
+
   return (
     <div className="dual-pane-grid" style={{
       display: 'grid',
@@ -194,16 +207,73 @@ export default function StructuredView({
       height: 'calc(100vh - 250px)',
       minHeight: '620px'
     }}>
-      {/* ================= LEFT PANE: STRUCTURED CARDS ================= */}
+      {/* ================= LEFT PANE: EXTRACTED STRUCTURE ================= */}
       <div className="card" style={{
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         border: '1px solid var(--border-subtle)'
       }}>
+        {/* Executive Regulatory HUD & Copilot Trigger */}
+        <div style={{
+          padding: '0.75rem 1rem',
+          borderBottom: '1px solid var(--border-subtle)',
+          background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.5rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              color: 'var(--brand-emerald)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              padding: '0.2rem 0.55rem',
+              borderRadius: '6px'
+            }}>
+              <ShieldCheck size={13} />
+              <span>SERFF Verified</span>
+            </div>
+
+            <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+              <strong style={{ color: 'var(--text-main)' }}>{metadata.company_name || 'Carrier Document'}</strong>
+              {metadata.state && <span> • State: <strong style={{ color: 'var(--brand-cyan)' }}>{metadata.state}</strong></span>}
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsCopilotOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.3rem 0.75rem',
+              borderRadius: '8px',
+              backgroundColor: 'var(--brand-cyan)',
+              color: '#090D16',
+              fontWeight: 700,
+              fontSize: '0.76rem',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(56, 189, 248, 0.3)'
+            }}
+          >
+            <Bot size={14} />
+            <span>Ask AI Copilot</span>
+            <Sparkles size={12} />
+          </button>
+        </div>
+
         {/* Filter Controls Bar */}
         <div style={{
-          padding: '0.85rem 1rem',
+          padding: '0.75rem 1rem',
           borderBottom: '1px solid var(--border-subtle)',
           backgroundColor: 'var(--bg-app)',
           display: 'flex',
@@ -722,6 +792,14 @@ export default function StructuredView({
           )}
         </div>
       </div>
+
+      {/* Regulatory AI Copilot Modal Drawer */}
+      <RegulatoryAssistant 
+        isOpen={isCopilotOpen} 
+        onClose={() => setIsCopilotOpen(false)} 
+        documentData={documentData} 
+        onSelectSection={handleSelectSection} 
+      />
     </div>
   );
 }
