@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+__pycache__/
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+frontend/dist/
+.tempmediaStorage/
+backend_data/users.json
+backend_cache/
+
+# Environment variables
+.env
+frontend/.env
+*.local
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Cloudflare binary
+cloudflared.exe
